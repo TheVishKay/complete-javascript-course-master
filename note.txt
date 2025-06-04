@@ -1,0 +1,3 @@
+    FUNCTIONS OF JS
+
+alert("str") ==  for Giving out alerts
