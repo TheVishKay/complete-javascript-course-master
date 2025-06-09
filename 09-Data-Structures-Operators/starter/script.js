@@ -45,3 +45,36 @@ const restaurant = {
     },
   },
 };
+
+const players1 = game.players[0];
+const players2 = game.players[1];
+console.log(players1, players2);
+
+const gk = players1[0];
+const fieldPlayers = players1.slice(1);
+console.log(gk, fieldPlayers);
+
+const allPlayers = players1.concat(players2);
+console.log(allPlayers);
+
+const players1Final = players1.concat(['Thiago', 'Coutinho', 'Periscic']);
+
+const team1 = game.odds.team1;
+const draw = game.odds.x;
+const team2 = game.odds.team2;
+console.log(team1, draw, team2);
+
+const printGoals = function () {
+  const players = Array.from(arguments);
+  console.log(players);
+  console.log(players.length + ' goals were scored');
+};
+
+printGoals.apply(null, game.scored);
+
+if (team1 < team2) {
+  console.log('Team 1 is more likely to win');
+}
+if (team1 > team2) {
+  console.log('Team 2 is more likely to win');
+}

@@ -3,74 +3,198 @@
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // BANKIST APP
-
-// Data
-const account1 = {
-  owner: 'Jonas Schmedtmann',
-  movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
-  interestRate: 1.2, // %
+/////////////////////////////////////////////////
+const user1 = {
+  name: 'Walk Now',
+  transactions: [200, 450, -400, 3000, -650, -130, 70, 1300],
+  rate: 1.2,
   pin: 1111,
+  plan: 'premium',
 };
 
-const account2 = {
-  owner: 'Jessica Davis',
-  movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
-  interestRate: 1.5,
+const user2 = {
+  name: 'James lebron',
+  transactions: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
+  rate: 1.5,
   pin: 2222,
+  plan: 'standard',
 };
 
-const account3 = {
-  owner: 'Steven Thomas Williams',
-  movements: [200, -200, 340, -300, -20, 50, 400, -460],
-  interestRate: 0.7,
+const user3 = {
+  name: 'Thomas Williams',
+  transactions: [200, -200, 340, -300, -20, 50, 400, -460],
+  rate: 0.7,
   pin: 3333,
+  plan: 'premium',
 };
 
-const account4 = {
-  owner: 'Sarah Smith',
-  movements: [430, 1000, 700, 50, 90],
-  interestRate: 1,
+const user4 = {
+  name: 'Steve Smith',
+  transactions: [430, 1000, 700, 50, 90],
+  rate: 1,
   pin: 4444,
+  plan: 'basic',
 };
 
-const accounts = [account1, account2, account3, account4];
+const userAccounts = [user1, user2, user3, user4];
 
-// Elements
-const labelWelcome = document.querySelector('.welcome');
-const labelDate = document.querySelector('.date');
-const labelBalance = document.querySelector('.balance__value');
-const labelSumIn = document.querySelector('.summary__value--in');
-const labelSumOut = document.querySelector('.summary__value--out');
-const labelSumInterest = document.querySelector('.summary__value--interest');
-const labelTimer = document.querySelector('.timer');
+const welcomeMsg = document.querySelector('.welcome');
+const dateDisplay = document.querySelector('.date');
+const balanceDisplay = document.querySelector('.balance__value');
+const totalIn = document.querySelector('.summary__value--in');
+const totalOut = document.querySelector('.summary__value--out');
+const totalInterest = document.querySelector('.summary__value--interest');
+const sessionTimer = document.querySelector('.timer');
 
-const containerApp = document.querySelector('.app');
-const containerMovements = document.querySelector('.movements');
+const appWrapper = document.querySelector('.app');
+const transactionList = document.querySelector('.movements');
 
-const btnLogin = document.querySelector('.login__btn');
-const btnTransfer = document.querySelector('.form__btn--transfer');
-const btnLoan = document.querySelector('.form__btn--loan');
-const btnClose = document.querySelector('.form__btn--close');
-const btnSort = document.querySelector('.btn--sort');
+const loginBtn = document.querySelector('.login__btn');
+const transferBtn = document.querySelector('.form__btn--transfer');
+const loanBtn = document.querySelector('.form__btn--loan');
+const closeBtn = document.querySelector('.form__btn--close');
+const sortBtn = document.querySelector('.btn--sort');
 
-const inputLoginUsername = document.querySelector('.login__input--user');
-const inputLoginPin = document.querySelector('.login__input--pin');
-const inputTransferTo = document.querySelector('.form__input--to');
-const inputTransferAmount = document.querySelector('.form__input--amount');
-const inputLoanAmount = document.querySelector('.form__input--loan-amount');
-const inputCloseUsername = document.querySelector('.form__input--user');
-const inputClosePin = document.querySelector('.form__input--pin');
+const loginUserInput = document.querySelector('.login__input--user');
+const loginPinInput = document.querySelector('.login__input--pin');
+const transferToInput = document.querySelector('.form__input--to');
+const transferAmtInput = document.querySelector('.form__input--amount');
+const loanAmtInput = document.querySelector('.form__input--loan-amount');
+const closeUserInput = document.querySelector('.form__input--user');
+const closePinInput = document.querySelector('.form__input--pin');
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// LECTURES
+const renderTransactions = function (txns, sort = false) {
+  transactionList.innerHTML = '';
 
-const currencies = new Map([
-  ['USD', 'United States dollar'],
-  ['EUR', 'Euro'],
-  ['GBP', 'Pound sterling'],
-]);
+  const txnsToRender = sort ? txns.slice().sort((a, b) => a - b) : txns;
 
-const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
+  txnsToRender.forEach(function (txn, i) {
+    const type = txn > 0 ? 'deposit' : 'withdrawal';
 
-/////////////////////////////////////////////////
+    const html = `
+      <div class="movements__row">
+        <div class="movements__type movements__type--${type}">${
+      i + 1
+    } ${type}</div>
+        <div class="movements__value">${txn}€</div>
+      </div>
+    `;
+    transactionList.insertAdjacentHTML('afterbegin', html);
+  });
+};
+
+const showBalance = function (user) {
+  user.balance = user.transactions.reduce((sum, txn) => sum + txn, 0);
+  balanceDisplay.textContent = `${user.balance}€`;
+};
+
+const showSummary = function (user) {
+  const deposits = user.transactions
+    .filter(txn => txn > 0)
+    .reduce((sum, txn) => sum + txn, 0);
+  totalIn.textContent = `${deposits}€`;
+
+  const withdrawals = user.transactions
+    .filter(txn => txn < 0)
+    .reduce((sum, txn) => sum + txn, 0);
+  totalOut.textContent = `${Math.abs(withdrawals)}€`;
+
+  const earnedInterest = user.transactions
+    .filter(txn => txn > 0)
+    .map(dep => (dep * user.rate) / 100)
+    .filter(interest => interest >= 1)
+    .reduce((sum, interest) => sum + interest, 0);
+  totalInterest.textContent = `${earnedInterest}€`;
+};
+
+const generateUsernames = function (users) {
+  users.forEach(function (user) {
+    user.username = user.name
+      .toLowerCase()
+      .split(' ')
+      .map(part => part[0])
+      .join('');
+  });
+};
+generateUsernames(userAccounts);
+
+const refreshUI = function (user) {
+  renderTransactions(user.transactions);
+  showBalance(user);
+  showSummary(user);
+};
+
+let activeUser;
+
+loginBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  activeUser = userAccounts.find(
+    user => user.username === loginUserInput.value
+  );
+
+  if (activeUser?.pin === Number(loginPinInput.value)) {
+    welcomeMsg.textContent = `Welcome back, ${activeUser.name.split(' ')[0]}`;
+    appWrapper.style.opacity = 1;
+
+    loginUserInput.value = loginPinInput.value = '';
+    loginPinInput.blur();
+
+    refreshUI(activeUser);
+  }
+});
+
+transferBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(transferAmtInput.value);
+  const receiver = userAccounts.find(
+    user => user.username === transferToInput.value
+  );
+  transferAmtInput.value = transferToInput.value = '';
+
+  if (
+    amount > 0 &&
+    receiver &&
+    activeUser.balance >= amount &&
+    receiver?.username !== activeUser.username
+  ) {
+    activeUser.transactions.push(-amount);
+    receiver.transactions.push(amount);
+    refreshUI(activeUser);
+  }
+});
+
+loanBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(loanAmtInput.value);
+
+  if (amount > 0 && activeUser.transactions.some(txn => txn >= amount * 0.1)) {
+    activeUser.transactions.push(amount);
+    refreshUI(activeUser);
+  }
+  loanAmtInput.value = '';
+});
+
+closeBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (
+    closeUserInput.value === activeUser.username &&
+    Number(closePinInput.value) === activeUser.pin
+  ) {
+    const index = userAccounts.findIndex(
+      user => user.username === activeUser.username
+    );
+    userAccounts.splice(index, 1);
+    appWrapper.style.opacity = 0;
+  }
+
+  closeUserInput.value = closePinInput.value = '';
+});
+
+let sorted = false;
+sortBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+  renderTransactions(activeUser.transactions, !sorted);
+  sorted = !sorted;
+});
